@@ -1,5 +1,7 @@
 package onBoarding;
 
+import authentication.LoginForm;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -36,6 +38,7 @@ public class OnBoarding{
             @Override
             public void actionPerformed(ActionEvent e) {
                 frame.dispose();
+                new LoginForm();
             }
         });
 
