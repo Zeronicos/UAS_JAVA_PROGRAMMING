@@ -11,7 +11,7 @@ public class DatabaseConnection {
         Class.forName("com.mysql.cj.jdbc.Driver");
 
         this.conn = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/libtar", "", "");
+                "jdbc:mysql://localhost:3306/libtar", "nicoth", "sansanc09");
     }
 
     public boolean isConnected() {
