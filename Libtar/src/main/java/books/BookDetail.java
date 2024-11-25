@@ -17,7 +17,7 @@ public class BookDetail extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Panel untuk menampilkan gambar buku (setengah halaman atas)
+        // Panel buat tampilin gambar buku
         lblImage = new JLabel();
         lblImage.setHorizontalAlignment(JLabel.CENTER);
         JPanel panelImage = new JPanel();
@@ -26,7 +26,7 @@ public class BookDetail extends JFrame {
         panelImage.add(lblImage, BorderLayout.CENTER);
         add(panelImage, BorderLayout.NORTH);
 
-        // Panel untuk judul buku
+        // Panel buat judul buku
         JPanel panelTitle = new JPanel();
         panelTitle.setLayout(new FlowLayout(FlowLayout.LEFT)); // Align text to left
         panelTitle.setBorder(new TitledBorder("Title"));
@@ -34,29 +34,29 @@ public class BookDetail extends JFrame {
         lblTitle.setFont(new Font("Arial", Font.BOLD, 18));
         panelTitle.add(lblTitle);
 
-        // Panel untuk Author
+        // Panel buat Author
         JPanel panelAuthor = new JPanel();
-        panelAuthor.setLayout(new FlowLayout(FlowLayout.LEFT)); // Align text to left
+        panelAuthor.setLayout(new FlowLayout(FlowLayout.LEFT));
         panelAuthor.setBorder(new TitledBorder("Author"));
-        JLabel lblAuthor = new JLabel("Antony Gasing"); // Nama Author
+        JLabel lblAuthor = new JLabel("Antony Gasing");
         lblAuthor.setFont(new Font("Arial", Font.PLAIN, 16));
         panelAuthor.add(lblAuthor);
 
-        // Panel untuk Category
+        // Panel buat Category
         JPanel panelCategory = new JPanel();
-        panelCategory.setLayout(new FlowLayout(FlowLayout.LEFT)); // Align text to left
+        panelCategory.setLayout(new FlowLayout(FlowLayout.LEFT));
         panelCategory.setBorder(new TitledBorder("Category"));
-        JLabel lblCategory = new JLabel("Drama, Adventure, Psychology"); // Kategori Buku
+        JLabel lblCategory = new JLabel("Drama, Adventure, Psychology");
         lblCategory.setFont(new Font("Arial", Font.PLAIN, 16));
         panelCategory.add(lblCategory);
 
-        // Panel bawah untuk Author dan Category
+        // Panel buat Author dan Category
         JPanel panelAuthorCategory = new JPanel();
         panelAuthorCategory.setLayout(new BoxLayout(panelAuthorCategory, BoxLayout.Y_AXIS));
-        panelAuthorCategory.add(panelAuthor); // Add Author panel
-        panelAuthorCategory.add(panelCategory); // Add Category panel
+        panelAuthorCategory.add(panelAuthor);
+        panelAuthorCategory.add(panelCategory);
 
-        // Panel untuk Deskripsi Buku
+        // Panel buat Deskripsi Buku
         JPanel panelDescription = new JPanel();
         panelDescription.setLayout(new FlowLayout());
         panelDescription.setBorder(new TitledBorder("Description"));
@@ -67,28 +67,28 @@ public class BookDetail extends JFrame {
                 "exploring themes of drama, adventure, and psychology. It's a journey through personal struggles " +
                 "and the quest for meaning, presenting a profound narrative on human resilience and the complexity " +
                 "of the human mind.");
-        txtDescription.setFont(new Font("Arial", Font.PLAIN, 18)); // Set larger font size
-        txtDescription.setEditable(false); // Disable editing
+        txtDescription.setFont(new Font("Arial", Font.PLAIN, 18));
+        txtDescription.setEditable(false);
         panelDescription.add(txtDescription);
 
-        // Tombol untuk membuka halaman baru, di bawah kanan panel deskripsi
+        // Tombol tentang buku buat ke new page
         btnAboutBook = new JButton("Tentang Buku Ini");
         btnAboutBook.addActionListener(e -> openAboutBookPage());
 
-        // Set layout untuk panel deskripsi dan tombol
+        // layout buat panel deskripsi ama tombol
         panelDescription.setLayout(new BorderLayout());
         panelDescription.add(txtDescription, BorderLayout.CENTER);
         JPanel panelButton = new JPanel();
-        panelButton.setLayout(new FlowLayout(FlowLayout.RIGHT)); // Posisikan tombol ke kanan
+        panelButton.setLayout(new FlowLayout(FlowLayout.RIGHT));
         panelButton.add(btnAboutBook);
         panelDescription.add(panelButton, BorderLayout.SOUTH);
 
-        // Panel utama untuk menggabungkan semua panel
+        // gabungin semua panel
         JPanel panelTabs = new JPanel();
         panelTabs.setLayout(new BoxLayout(panelTabs, BoxLayout.Y_AXIS));
-        panelTabs.add(panelTitle);                // Tambahkan panel judul
-        panelTabs.add(panelAuthorCategory);       // Tambahkan panel Author dan Category
-        panelTabs.add(panelDescription);          // Tambahkan panel Deskripsi
+        panelTabs.add(panelTitle);
+        panelTabs.add(panelAuthorCategory);
+        panelTabs.add(panelDescription);
 
         add(panelTabs, BorderLayout.CENTER);
 
@@ -96,33 +96,33 @@ public class BookDetail extends JFrame {
     }
 
     private void openAboutBookPage() {
-        // Membuka halaman baru (JFrame penuh) dengan informasi lebih lanjut tentang buku
+        // newpage isinya tentang buku
         JFrame aboutPage = new JFrame("About This Book");
         aboutPage.setSize(400, 500);
-        aboutPage.setLocationRelativeTo(this); // Menempatkan halaman baru di tengah layar
-        aboutPage.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Menutup halaman baru saat ditutup
+        aboutPage.setLocationRelativeTo(this);
+        aboutPage.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        // Panel pertama: Tentang Buku Ini
+        // Panel buat Tentang Buku
         JPanel panelAboutBook = new JPanel();
         panelAboutBook.setLayout(new BorderLayout());
         panelAboutBook.setBorder(new TitledBorder("Tentang Buku Ini"));
 
-        // Menggunakan JLabel untuk menampilkan deskripsi buku
+        //  deskripsi buku
         JLabel lblAboutBook = new JLabel("<html>This book dives into the lives of individuals facing the hardships of life, " +
                 "exploring themes of drama, adventure, and psychology. It's a journey through personal struggles " +
                 "and the quest for meaning, presenting a profound narrative on human resilience and the complexity " +
                 "of the human mind.</html>");
-        lblAboutBook.setFont(new Font("Arial", Font.PLAIN, 18)); // Set font lebih kecil (18)
-        lblAboutBook.setVerticalAlignment(SwingConstants.TOP); // Align the text to top for better layout
+        lblAboutBook.setFont(new Font("Arial", Font.PLAIN, 18));
+        lblAboutBook.setVerticalAlignment(SwingConstants.TOP);
 
-        // Menambahkan padding agar tidak terlalu rapat dengan border
+        // padding biar ga rapet ama border
         lblAboutBook.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         panelAboutBook.add(lblAboutBook, BorderLayout.CENTER);
 
-        // Panel kedua: Detail Buku
+        // Panel buat Detail Buku
         JPanel panelBookDetails = new JPanel();
-        panelBookDetails.setLayout(new BoxLayout(panelBookDetails, BoxLayout.Y_AXIS)); // Vertikal Layout
+        panelBookDetails.setLayout(new BoxLayout(panelBookDetails, BoxLayout.Y_AXIS));
         panelBookDetails.setBorder(new TitledBorder("Detail Buku"));
 
         // Informasi buku
@@ -133,8 +133,8 @@ public class BookDetail extends JFrame {
         JLabel lblPages = new JLabel("Pages : 165 pages");
         JLabel lblGenres = new JLabel("Genres : Drama, Adventure, Psychology");
 
-        // Mengatur font sedikit lebih kecil pada setiap JLabel (font size 20)
-        Font smallerFont = new Font("Arial", Font.PLAIN, 20); // Font lebih kecil (20)
+        // kecilin font JLabel
+        Font smallerFont = new Font("Arial", Font.PLAIN, 20);
         lblLanguage.setFont(smallerFont);
         lblAuthor.setFont(smallerFont);
         lblPublisher.setFont(smallerFont);
@@ -142,15 +142,15 @@ public class BookDetail extends JFrame {
         lblPages.setFont(smallerFont);
         lblGenres.setFont(smallerFont);
 
-        // Menambahkan padding (spasi kosong) antara setiap label
-        lblLanguage.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));  // Spasi bawah
-        lblAuthor.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));  // Spasi atas & bawah
-        lblPublisher.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));  // Spasi atas & bawah
-        lblPublishedOn.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));  // Spasi atas & bawah
-        lblPages.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));  // Spasi atas & bawah
-        lblGenres.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));  // Spasi atas
+        // padding space bawah
+        lblLanguage.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        lblAuthor.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        lblPublisher.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        lblPublishedOn.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        lblPages.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        lblGenres.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
 
-        // Menambahkan komponen ke panelBookDetails
+        // isi panel BookDetails
         panelBookDetails.add(lblLanguage);
         panelBookDetails.add(lblAuthor);
         panelBookDetails.add(lblPublisher);
@@ -158,22 +158,21 @@ public class BookDetail extends JFrame {
         panelBookDetails.add(lblPages);
         panelBookDetails.add(lblGenres);
 
-        // Panel untuk tombol "Back" di bagian bawah
+        // panel tombol "Back"
         JPanel panelBackButton = new JPanel();
         panelBackButton.setLayout(new BorderLayout());
 
         // Tombol Back
         JButton btnBack = new JButton("Back to Main Page");
-        btnBack.setFont(new Font("Arial", Font.PLAIN, 16)); // Set font untuk tombol
+        btnBack.setFont(new Font("Arial", Font.PLAIN, 16));
         btnBack.addActionListener(e -> {
-            // Fungsi tombol untuk kembali ke halaman utama atau menutup jendela
-            aboutPage.dispose(); // Menutup halaman ini dan kembali ke halaman utama
+            aboutPage.dispose();
         });
 
-        // Menambahkan tombol ke panelBackButton
-        panelBackButton.add(btnBack, BorderLayout.EAST); // Posisi kanan bawah
+        // pindahin lokasi tombol
+        panelBackButton.add(btnBack, BorderLayout.EAST);
 
-        // Menambahkan panelAboutBook, panelBookDetails dan panelBackButton ke aboutPage
+        //bikin panelAboutBook, panelBookDetails ama panelBackButton buat ke aboutPage
         aboutPage.setLayout(new BorderLayout());
         aboutPage.add(panelAboutBook, BorderLayout.NORTH);
         aboutPage.add(panelBookDetails, BorderLayout.CENTER);
