@@ -22,14 +22,7 @@ public class Sidebar extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(SIDEBAR_BG);
         setPreferredSize(new Dimension(220, 0));
-        setBorder(new EmptyBorder(10, 0, 10, 0));
-
-        JLabel label = new JLabel("LIBRARY UNTAR");
-        label.setFont(new Font("Arial", Font.BOLD, 20));
-        label.setForeground(TEXT_COLOR);
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        label.setBorder(new EmptyBorder(10, 0, 20, 0));
-        add(label);
+        setBorder(new EmptyBorder(20, 0, 10, 0));
 
         addMenuButton("dashboard", "dashboard");
         addMenuButton("Staff", "staff");
@@ -68,7 +61,7 @@ public class Sidebar extends JPanel {
     }
 
     private void styleButton(JButton button) {
-        button.setFont(new Font("Arial", Font.PLAIN, 16));
+        button.setFont(new Font("Arial", Font.PLAIN, 20));
         button.setForeground(TEXT_COLOR);
         button.setBackground(SIDEBAR_BG);
         button.setFocusPainted(false);
@@ -78,6 +71,6 @@ public class Sidebar extends JPanel {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         button.setHorizontalAlignment(SwingConstants.LEFT);
-        button.setBorder(new EmptyBorder(0, 20, 0, 0));
+        button.setBorder(new EmptyBorder(10, 20, 10, 0));
     }
 }
