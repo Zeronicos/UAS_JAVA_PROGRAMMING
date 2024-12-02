@@ -1,38 +1,42 @@
-package member;
-
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.sql.*;
 import java.util.ArrayList;
 
 public class Member extends JFrame {
-    private JTextField txtName, txtBirthPlace, txtAddress;
-    private JComboBox<String> cmbGender, cmbDay, cmbMonth, cmbYear;
+    private JTextField txtName, txtStudentID, txtMajor, txtPhoneNumber, txtEmail;
     private JButton btnSubmit;
-    private ArrayList<MemberData> memberList;
+    private int editIndex = -1; // To indicate if the user is editing data
+    private Connection connection;
 
     public Member() {
-        memberList = new ArrayList<>();
+        // konek ke database
+        try {
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/libtar", "kevin", "");
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error connecting to database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
 
         setTitle("Form Input Member");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(600, 400);
+        setLocationRelativeTo(null);
 
-        // pake GridBagLayout biar layout fleksibel
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10); // Spasi antar elemen
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Font label dan field
         Font labelFont = new Font("Arial", Font.PLAIN, 16);
         Font fieldFont = new Font("Arial", Font.PLAIN, 14);
 
-        // Nama
+        // bikin fields buat form
         gbc.gridx = 0;
         gbc.gridy = 0;
-        JLabel lblName = new JLabel("Nama");
+        JLabel lblName = new JLabel("Name");
         lblName.setFont(labelFont);
         add(lblName, gbc);
 
@@ -41,76 +45,51 @@ public class Member extends JFrame {
         txtName.setFont(fieldFont);
         add(txtName, gbc);
 
-        // Kota Tempat Lahir
         gbc.gridx = 0;
         gbc.gridy = 1;
-        JLabel lblBirthPlace = new JLabel("Kota Tempat Lahir");
-        lblBirthPlace.setFont(labelFont);
-        add(lblBirthPlace, gbc);
+        JLabel lblStudentID = new JLabel("Student ID");
+        lblStudentID.setFont(labelFont);
+        add(lblStudentID, gbc);
 
         gbc.gridx = 1;
-        txtBirthPlace = new JTextField(20);
-        txtBirthPlace.setFont(fieldFont);
-        add(txtBirthPlace, gbc);
+        txtStudentID = new JTextField(20);
+        txtStudentID.setFont(fieldFont);
+        add(txtStudentID, gbc);
 
-        // Tanggal Lahir
         gbc.gridx = 0;
         gbc.gridy = 2;
-        JLabel lblBirthDate = new JLabel("Tanggal Lahir");
-        lblBirthDate.setFont(labelFont);
-        add(lblBirthDate, gbc);
+        JLabel lblMajor = new JLabel("Major");
+        lblMajor.setFont(labelFont);
+        add(lblMajor, gbc);
 
-        // Panel buat ComboBox hari, bulan, dan tahun
         gbc.gridx = 1;
-        JPanel datePanel = new JPanel();
-        datePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        txtMajor = new JTextField(20);
+        txtMajor.setFont(fieldFont);
+        add(txtMajor, gbc);
 
-        // Hari
-        cmbDay = new JComboBox<>();
-        for (int i = 1; i <= 31; i++) {
-            cmbDay.addItem(String.format("%02d", i)); // Format dua digit
-        }
-        datePanel.add(cmbDay);
-
-        // Bulan
-        String[] months = {"Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"};
-        cmbMonth = new JComboBox<>(months);
-        datePanel.add(cmbMonth);
-
-        // Tahun
-        cmbYear = new JComboBox<>();
-        for (int i = 1900; i <= 2024; i++) {
-            cmbYear.addItem(String.valueOf(i));
-        }
-        datePanel.add(cmbYear);
-
-        add(datePanel, gbc);
-
-        // Jenis Kelamin
         gbc.gridx = 0;
         gbc.gridy = 3;
-        JLabel lblGender = new JLabel("Jenis Kelamin");
-        lblGender.setFont(labelFont);
-        add(lblGender, gbc);
+        JLabel lblPhoneNumber = new JLabel("Phone Number");
+        lblPhoneNumber.setFont(labelFont);
+        add(lblPhoneNumber, gbc);
 
         gbc.gridx = 1;
-        cmbGender = new JComboBox<>(new String[]{"Pria", "Wanita"});
-        cmbGender.setFont(fieldFont);
-        add(cmbGender, gbc);
+        txtPhoneNumber = new JTextField(20);
+        txtPhoneNumber.setFont(fieldFont);
+        add(txtPhoneNumber, gbc);
 
-        // Alamat
         gbc.gridx = 0;
         gbc.gridy = 4;
-        JLabel lblAddress = new JLabel("Alamat");
-        lblAddress.setFont(labelFont);
-        add(lblAddress, gbc);
+        JLabel lblEmail = new JLabel("Email");
+        lblEmail.setFont(labelFont);
+        add(lblEmail, gbc);
 
         gbc.gridx = 1;
-        txtAddress = new JTextField(20);
-        txtAddress.setFont(fieldFont);
-        add(txtAddress, gbc);
+        txtEmail = new JTextField(20);
+        txtEmail.setFont(fieldFont);
+        add(txtEmail, gbc);
 
-        // Tombol Submit
+        // bikin button buat submit
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.gridwidth = 2;
@@ -118,170 +97,233 @@ public class Member extends JFrame {
         btnSubmit.setFont(new Font("Arial", Font.BOLD, 14));
         add(btnSubmit, gbc);
 
-        // Action buat tombol submit
         btnSubmit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (validateInputs()) {
                     String name = txtName.getText();
-                    String birthPlace = txtBirthPlace.getText();
-                    String day = (String) cmbDay.getSelectedItem();
-                    String month = (String) cmbMonth.getSelectedItem();
-                    String year = (String) cmbYear.getSelectedItem();
-                    String gender = (String) cmbGender.getSelectedItem();
-                    String address = txtAddress.getText();
+                    String studentID = txtStudentID.getText();
+                    String major = txtMajor.getText();
+                    String phoneNumber = txtPhoneNumber.getText();
+                    String email = txtEmail.getText();
 
-                    String birthDate = day + " " + month + " " + year;
+                    // update database abis di edit
+                    if (editIndex == -1) {
+                        addMemberToDatabase(name, studentID, major, phoneNumber, email);
+                    } else {
+                        // Edit member yang udah di bikin
+                        updateMemberInDatabase(name, studentID, major, phoneNumber, email, editIndex);
+                        editIndex = -1; // Reset after editing
+                    }
 
-                    // nyimpen data buat list
-                    MemberData member = new MemberData(name, birthPlace, birthDate, gender, address);
-                    memberList.add(member);
-
-                    // nampilin data ke page baru
-                    new DataPage(memberList).setVisible(true);
+                    // Reload tablenya yang abis di updte
                     dispose();
+                    new MainPage(Member.this).setVisible(true);
                 }
             }
         });
     }
 
-    // buat validasi input
     private boolean validateInputs() {
+        // Validasi logika input
         if (txtName.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nama harus diisi!", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Name must be filled!", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        if (txtBirthPlace.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Kota Tempat Lahir harus diisi!", "Error", JOptionPane.ERROR_MESSAGE);
+        if (!txtStudentID.getText().matches("\\d{9}")) {
+            JOptionPane.showMessageDialog(this, "Student ID must be exactly 9 digits!", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        if (cmbDay.getSelectedIndex() == -1 || cmbMonth.getSelectedIndex() == -1 || cmbYear.getSelectedIndex() == -1) {
-            JOptionPane.showMessageDialog(this, "Tanggal Lahir harus lengkap!", "Error", JOptionPane.ERROR_MESSAGE);
+        if (txtMajor.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Major must be filled!", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        if (cmbGender.getSelectedIndex() == -1) {
-            JOptionPane.showMessageDialog(this, "Jenis Kelamin harus dipilih!", "Error", JOptionPane.ERROR_MESSAGE);
+        if (!txtPhoneNumber.getText().matches("\\d+")) {
+            JOptionPane.showMessageDialog(this, "Phone Number must contain only digits!", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        if (txtAddress.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Alamat harus diisi!", "Error", JOptionPane.ERROR_MESSAGE);
+        if (!txtEmail.getText().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            JOptionPane.showMessageDialog(this, "Invalid email format!", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         return true;
+    }
+
+    private void addMemberToDatabase(String name, String studentID, String major, String phoneNumber, String email) {
+        try {
+            String query = "INSERT INTO members (name, student_id, major, phone_number, email, is_manual) VALUES (?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, name);
+                stmt.setString(2, studentID);
+                stmt.setString(3, major);
+                stmt.setString(4, phoneNumber);
+                stmt.setString(5, email);
+                stmt.setBoolean(6, true); // Marking as manually added
+                stmt.executeUpdate();
+                JOptionPane.showMessageDialog(this, "Member added successfully.");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error adding member: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateMemberInDatabase(String name, String studentID, String major, String phoneNumber, String email, int id) {
+        try {
+            String query = "UPDATE members SET name = ?, student_id = ?, major = ?, phone_number = ?, email = ? WHERE id = ?";
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, name);
+                stmt.setString(2, studentID);
+                stmt.setString(3, major);
+                stmt.setString(4, phoneNumber);
+                stmt.setString(5, email);
+                stmt.setInt(6, id);
+                stmt.executeUpdate();
+                JOptionPane.showMessageDialog(this, "Member updated successfully.");
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error updating member: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public static void main(String[] args) {
         new Member().setVisible(true);
     }
 
-    // data member
-    class MemberData {
-        private String name;
-        private String birthPlace;
-        private String birthDate;
-        private String gender;
-        private String address;
+    // MainPage class buat display member data dari database
+    class MainPage extends JFrame {
+        private Member memberFrame;
 
-        public MemberData(String name, String birthPlace, String birthDate, String gender, String address) {
-            this.name = name;
-            this.birthPlace = birthPlace;
-            this.birthDate = birthDate;
-            this.gender = gender;
-            this.address = address;
+        public MainPage(Member memberFrame) {
+            this.memberFrame = memberFrame;
+            setTitle("Member List");
+            setSize(700, 400);
+            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            setLocationRelativeTo(null);
+
+            String[] columnNames = {"No", "Name", "Student ID", "Detail", "Edit"};
+            DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
+            JTable table = new JTable(model);
+            table.setRowHeight(30);
+
+            try {
+                String query = "SELECT * FROM members";
+                Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery(query);
+
+                while (rs.next()) {
+                    model.addRow(new Object[]{
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("student_id"),
+                            rs.getBoolean("is_manual") ? "Detail" : "",
+                            rs.getBoolean("is_manual") ? "Edit" : ""
+                    });
+                }
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Error retrieving members: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+            table.getColumn("Detail").setCellRenderer(new ButtonRenderer());
+            table.getColumn("Detail").setCellEditor(new ButtonEditor(new JCheckBox(), table, false));
+
+            table.getColumn("Edit").setCellRenderer(new ButtonRenderer());
+            table.getColumn("Edit").setCellEditor(new ButtonEditor(new JCheckBox(), table, true));
+
+            JScrollPane scrollPane = new JScrollPane(table);
+            add(scrollPane, BorderLayout.CENTER);
         }
-
-        public String getName() { return name; }
-        public String getBirthPlace() { return birthPlace; }
-        public String getBirthDate() { return birthDate; }
-        public String getGender() { return gender; }
-        public String getAddress() { return address; }
     }
 
-    // Halaman baru isinya data member
-    class DataPage extends JFrame {
-        public DataPage(ArrayList<MemberData> memberList) {
-            setTitle("Data Member");
-            setSize(600, 400);
+    class ButtonRenderer extends JButton implements TableCellRenderer {
+        public ButtonRenderer() {
+            setOpaque(true);
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            setText((value == null) ? "" : value.toString());
+            return this;
+        }
+    }
+
+    class ButtonEditor extends DefaultCellEditor {
+        private JButton button;
+        private boolean isPushed;
+        private JTable table;
+        private boolean isEdit;
+
+        public ButtonEditor(JCheckBox checkBox, JTable table, boolean isEdit) {
+            super(checkBox);
+            this.table = table;
+            this.isEdit = isEdit;
+            button = new JButton();
+            button.setOpaque(true);
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    fireEditingStopped();
+                }
+            });
+        }
+
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            button.setText((value == null) ? "" : value.toString());
+            isPushed = true;
+            return button;
+        }
+        public Object getCellEditorValue() {
+            if (isPushed) {
+                int selectedRow = table.getSelectedRow();
+                if (isEdit) {
+                    int memberID = (int) table.getValueAt(selectedRow, 0);
+                    Member memberFrame = new Member();
+                    memberFrame.editIndex = memberID;
+                    memberFrame.setVisible(true);
+                } else {
+                    int memberID = (int) table.getValueAt(selectedRow, 0);
+                    new DetailPage(memberID).setVisible(true);
+                }
+            }
+            isPushed = false;
+            return button.getText();
+        }
+    }
+
+    class DetailPage extends JFrame {
+        public DetailPage(int memberID) {
+            setTitle("Member Detail");
+            setSize(400, 300);
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            setLocationRelativeTo(null);
 
-            setLayout(new GridBagLayout());
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new Insets(10, 10, 10, 10);
-            gbc.anchor = GridBagConstraints.WEST;
-
+            setLayout(new GridLayout(5, 2, 10, 10));
             Font labelFont = new Font("Arial", Font.PLAIN, 16);
 
-            int row = 0;
-            for (MemberData member : memberList) {
-                // Nama
-                gbc.gridx = 0;
-                gbc.gridy = row++;
-                JLabel lblName = new JLabel("Nama:");
-                lblName.setFont(labelFont);
-                add(lblName, gbc);
+            try {
+                String query = "SELECT * FROM members WHERE id = ?";
+                PreparedStatement stmt = connection.prepareStatement(query);
+                stmt.setInt(1, memberID);
+                ResultSet rs = stmt.executeQuery();
 
-                gbc.gridx = 1;
-                JLabel lblNameValue = new JLabel(member.getName());
-                lblNameValue.setFont(labelFont);
-                add(lblNameValue, gbc);
+                if (rs.next()) {
+                    add(new JLabel("Name:"));
+                    add(new JLabel(rs.getString("name")));
 
-                row++; // Baris kosong
+                    add(new JLabel("Student ID:"));
+                    add(new JLabel(rs.getString("student_id")));
 
-                // Kota Tempat Lahir
-                gbc.gridx = 0;
-                gbc.gridy = row++;
-                JLabel lblBirthPlace = new JLabel("Kota Tempat Lahir:");
-                lblBirthPlace.setFont(labelFont);
-                add(lblBirthPlace, gbc);
+                    add(new JLabel("Major:"));
+                    add(new JLabel(rs.getString("major")));
 
-                gbc.gridx = 1;
-                JLabel lblBirthPlaceValue = new JLabel(member.getBirthPlace());
-                lblBirthPlaceValue.setFont(labelFont);
-                add(lblBirthPlaceValue, gbc);
+                    add(new JLabel("Phone Number:"));
+                    add(new JLabel(rs.getString("phone_number")));
 
-                row++; // Baris kosong
-
-                // Tanggal Lahir
-                gbc.gridx = 0;
-                gbc.gridy = row++;
-                JLabel lblBirthDate = new JLabel("Tanggal Lahir:");
-                lblBirthDate.setFont(labelFont);
-                add(lblBirthDate, gbc);
-
-                gbc.gridx = 1;
-                JLabel lblBirthDateValue = new JLabel(member.getBirthDate());
-                lblBirthDateValue.setFont(labelFont);
-                add(lblBirthDateValue, gbc);
-
-                row++; // Baris kosong
-
-                // Jenis Kelamin
-                gbc.gridx = 0;
-                gbc.gridy = row++;
-                JLabel lblGender = new JLabel("Jenis Kelamin:");
-                lblGender.setFont(labelFont);
-                add(lblGender, gbc);
-
-                gbc.gridx = 1;
-                JLabel lblGenderValue = new JLabel(member.getGender());
-                lblGenderValue.setFont(labelFont);
-                add(lblGenderValue, gbc);
-
-                row++; // Baris kosong
-
-                // Alamat
-                gbc.gridx = 0;
-                gbc.gridy = row++;
-                JLabel lblAddress = new JLabel("Alamat:");
-                lblAddress.setFont(labelFont);
-                add(lblAddress, gbc);
-
-                gbc.gridx = 1;
-                JLabel lblAddressValue = new JLabel(member.getAddress());
-                lblAddressValue.setFont(labelFont);
-                add(lblAddressValue, gbc);
-
-                row += 2;
+                    add(new JLabel("Email:"));
+                    add(new JLabel(rs.getString("email")));
+                }
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Error retrieving member details: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
