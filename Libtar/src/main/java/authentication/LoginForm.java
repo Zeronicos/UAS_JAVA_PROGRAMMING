@@ -43,7 +43,11 @@ public class LoginForm extends JFrame {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                validateLogin();
+                try {
+                    validateLogin();
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
         add(loginButton);
@@ -54,7 +58,7 @@ public class LoginForm extends JFrame {
         setVisible(true);
     }
 
-    private void validateLogin() {
+    private void validateLogin() throws Exception {
         String username = usernameField.getText();
         String password = String.valueOf(passwordField.getPassword());
 

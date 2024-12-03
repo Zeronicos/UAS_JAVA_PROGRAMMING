@@ -16,7 +16,7 @@ public class Home extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
 
-    public Home() {
+    public Home() throws Exception {
         setTitle("Library UNTAR");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
@@ -44,7 +44,7 @@ public class Home extends JFrame {
         setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         new Home();
     }
 }
