@@ -3,18 +3,19 @@ package books;
 import database.DatabaseConnection;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.*;
 
 public class CreateBook extends JDialog {
-    private JTextField titleField, authorField, publisherField, yearField, stockField;
-    private JComboBox<String> categoryComboBox;
-    private JTextArea descriptionArea;
-    private JButton saveButton, cancelButton, chooseImageButton;
+    private final JTextField titleField;
+    private final JTextField authorField;
+    private final JTextField publisherField;
+    private final JTextField yearField;
+    private final JTextField stockField;
+    private final JComboBox<String> categoryComboBox;
+    private final JTextArea descriptionArea;
     private File selectedImageFile;
 
     public CreateBook(Book bookPanel) throws Exception {
@@ -39,23 +40,20 @@ public class CreateBook extends JDialog {
         descriptionArea = new JTextArea();
 
         JLabel imageLabel = new JLabel("Image:");
-        chooseImageButton = new JButton("Choose Image");
-        chooseImageButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                int result = fileChooser.showOpenDialog(CreateBook.this);
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    selectedImageFile = fileChooser.getSelectedFile();
-                }
+        JButton chooseImageButton = new JButton("Choose Image");
+        chooseImageButton.addActionListener(_ -> {
+            JFileChooser fileChooser = new JFileChooser();
+            int result = fileChooser.showOpenDialog(CreateBook.this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                selectedImageFile = fileChooser.getSelectedFile();
             }
         });
 
-        saveButton = new JButton("Save");
-        cancelButton = new JButton("Cancel");
+        JButton saveButton = new JButton("Save");
+        JButton cancelButton = new JButton("Cancel");
 
-        cancelButton.addActionListener(e -> dispose());
-        saveButton.addActionListener(e -> {
+        cancelButton.addActionListener(_ -> dispose());
+        saveButton.addActionListener(_ -> {
             try {
                 saveBook(bookPanel);
             } catch (Exception ex) {

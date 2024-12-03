@@ -13,8 +13,6 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Home extends JFrame {
-    private CardLayout cardLayout;
-    private JPanel mainPanel;
 
     public Home() throws Exception {
         setTitle("Library UNTAR");
@@ -22,8 +20,8 @@ public class Home extends JFrame {
         setSize(1000, 600);
         setLayout(new BorderLayout());
 
-        cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
+        CardLayout cardLayout = new CardLayout();
+        JPanel mainPanel = new JPanel(cardLayout);
 
         mainPanel.add(new Dashboard(), "dashboard");
         mainPanel.add(new Staff(), "staff");

@@ -4,21 +4,17 @@ import database.DatabaseConnection;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.sql.*;
 import java.util.Vector;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class Book extends JPanel {
-    private JTable bookTable;
-    private DefaultTableModel tableModel;
+    private final DefaultTableModel tableModel;
 
     public Book() throws Exception {
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
-
+        
         JLabel titleLabel = new JLabel("Book Management", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
@@ -31,7 +27,7 @@ public class Book extends JPanel {
             }
         };
 
-        bookTable = new JTable(tableModel);
+        JTable bookTable = new JTable(tableModel);
         bookTable.setRowHeight(30);
 
         JScrollPane scrollPane = new JScrollPane(bookTable);
@@ -39,7 +35,18 @@ public class Book extends JPanel {
 
         loadBookData();
 
-        // Footer panel with Add Book button
+        JPanel footerPanel = getjPanel();
+
+        add(footerPanel, BorderLayout.SOUTH);
+
+        bookTable.getColumnModel().getColumn(6).setCellRenderer(new ButtonRenderer());
+        bookTable.getColumnModel().getColumn(6).setCellEditor(new ButtonEditor(new JCheckBox(), this));
+
+        // Add custom renderer for the image column
+        bookTable.getColumnModel().getColumn(5).setCellRenderer(new ImageRenderer());
+    }
+
+    private JPanel getjPanel() {
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         footerPanel.setBackground(Color.WHITE);
 
@@ -47,7 +54,7 @@ public class Book extends JPanel {
         addButton.setFont(new Font("Arial", Font.PLAIN, 14));
         addButton.setBackground(new Color(102, 255, 102));
         addButton.setForeground(Color.BLACK);
-        addButton.addActionListener(e -> {
+        addButton.addActionListener(_ -> {
             try {
                 new CreateBook(this);
             } catch (Exception ex) {
@@ -55,13 +62,7 @@ public class Book extends JPanel {
             }
         });
         footerPanel.add(addButton);
-
-        add(footerPanel, BorderLayout.SOUTH);
-
-        bookTable.getColumnModel().getColumn(6).setCellRenderer(new ButtonRenderer());
-        bookTable.getColumnModel().getColumn(6).setCellEditor(new ButtonEditor(new JCheckBox(), this));
-
-        bookTable.getColumnModel().getColumn(5).setCellRenderer(new ImageRenderer());
+        return footerPanel;
     }
 
     public void loadBookData() throws Exception {
@@ -85,11 +86,12 @@ public class Book extends JPanel {
                     row.add(rs.getInt("books_stock"));
                     row.add(rs.getString("shelf_name"));
 
+                    // Load image BLOB and set it for display
                     Blob imageBlob = rs.getBlob("image");
                     byte[] imageBytes = (imageBlob != null) ? imageBlob.getBytes(1, (int) imageBlob.length()) : null;
-                    row.add(imageBytes);
+                    row.add(imageBytes);  // Store image data (byte[]) in table
 
-                    row.add("Edit/Delete");
+                    row.add("Edit/Delete");  // Placeholder for action buttons
                     tableModel.addRow(row);
                 }
             }
@@ -102,16 +104,15 @@ public class Book extends JPanel {
         loadBookData();
     }
 
-    class ImageRenderer extends JLabel implements TableCellRenderer {
+    static class ImageRenderer extends JLabel implements TableCellRenderer {
         public ImageRenderer() {
             setOpaque(true);
         }
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            if (value != null && value instanceof byte[]) {
+            if (value instanceof byte[] imgData) {
                 // Convert byte[] to image and display it
-                byte[] imgData = (byte[]) value;
                 ImageIcon imageIcon = new ImageIcon(imgData);
                 setIcon(imageIcon);
             } else {
@@ -121,7 +122,7 @@ public class Book extends JPanel {
         }
     }
 
-    class ButtonRenderer extends JButton implements TableCellRenderer {
+    static class ButtonRenderer extends JButton implements TableCellRenderer {
         public ButtonRenderer() {
             setOpaque(true);
         }
@@ -135,7 +136,7 @@ public class Book extends JPanel {
 
     class ButtonEditor extends DefaultCellEditor {
         private String label;
-        private Book bookPanel;
+        private final Book bookPanel;
 
         public ButtonEditor(JCheckBox checkBox, Book bookPanel) {
             super(checkBox);
@@ -147,18 +148,14 @@ public class Book extends JPanel {
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
             label = (value == null) ? "Edit/Delete" : value.toString();
             JButton button = new JButton(label);
-            button.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    // Handle button click (Edit/Delete)
-                    int bookId = (int) table.getValueAt(row, 0);
-                    int confirm = JOptionPane.showConfirmDialog(bookPanel, "Are you sure you want to delete this book?");
-                    if (confirm == JOptionPane.YES_OPTION) {
-                        try {
-                            deleteBook(bookId);
-                        } catch (Exception ex) {
-                            throw new RuntimeException(ex);
-                        }
+            button.addActionListener(_ -> {
+                int bookId = (int) table.getValueAt(row, 0);
+                int confirm = JOptionPane.showConfirmDialog(bookPanel, "Are you sure you want to delete this book?");
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        deleteBook(bookId);
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
                     }
                 }
             });

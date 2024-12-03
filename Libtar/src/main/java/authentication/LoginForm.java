@@ -4,12 +4,10 @@ import home.Home;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class LoginForm extends JFrame {
-    private JTextField usernameField;
-    private JPasswordField passwordField;
+    private final JTextField usernameField;
+    private final JPasswordField passwordField;
 
     public LoginForm() {
         setTitle("Login Form");
@@ -40,14 +38,11 @@ public class LoginForm extends JFrame {
 
         JButton loginButton = new JButton("Login");
         loginButton.setBounds(150, 170, 80, 25);
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    validateLogin();
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
+        loginButton.addActionListener(_ -> {
+            try {
+                validateLogin();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
             }
         });
         add(loginButton);
