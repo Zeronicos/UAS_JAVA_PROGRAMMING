@@ -7,25 +7,31 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URL;
 
-public class OnBoarding{
-    private JFrame frame;
+public class OnBoarding {
+    private final JFrame frame;
 
     public OnBoarding() {
-
         frame = new JFrame("Library Untar");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 360);
+        frame.setSize(400, 200);
 
         JPanel mainPanel = new JPanel();
         mainPanel.setBackground(Color.WHITE);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBorder(new EmptyBorder(30, 20, 30, 20));
 
-        ImageIcon originalIcon = new ImageIcon(getClass().getResource("/assets/logo_untar.png"));
-        Image scaledImage = originalIcon.getImage().getScaledInstance(150, 180, Image.SCALE_SMOOTH);
-        JLabel labelImage = new JLabel(new ImageIcon(scaledImage));
-        labelImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+        URL imageURL = getClass().getResource("./assets/logo_untar.png");
+        if (imageURL == null) {
+            System.out.println("Image not found! Check the file path.");
+        } else {
+            ImageIcon originalIcon = new ImageIcon(imageURL);
+            Image scaledImage = originalIcon.getImage().getScaledInstance(150, 180, Image.SCALE_SMOOTH);
+            JLabel labelImage = new JLabel(new ImageIcon(scaledImage));
+            labelImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+            mainPanel.add(labelImage);
+        }
 
         JLabel labelText = new JLabel("Welcome to Library Untar", SwingConstants.CENTER);
         labelText.setFont(new Font("Arial", Font.BOLD, 18));
@@ -42,7 +48,6 @@ public class OnBoarding{
             }
         });
 
-        mainPanel.add(labelImage);
         mainPanel.add(labelText);
         mainPanel.add(startButton);
 
@@ -50,4 +55,5 @@ public class OnBoarding{
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
+
 }
