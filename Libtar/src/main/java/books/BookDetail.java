@@ -1,187 +1,227 @@
 package books;
+
+import database.DatabaseConnection;
+
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.sql.*;
 
-public class BookDetail extends JFrame {
+public class BookDetail extends JDialog {
+    private final JTextField titleField;
+    private final JTextField authorField;
+    private final JComboBox<String> categoryComboBox;
+    private final JTextField stockField;
+    private final JTextField publisherField;
+    private final JTextField yearField;
+    private final JLabel bookImageLabel;
 
-    private JLabel lblImage;
-    private JLabel lblTitle, lblAuthor, lblCategory;
-    private JTextArea txtDescription;
-    private JButton btnAboutBook;
+    private final int bookId;
+    private final Book parentPanel;
 
-    public BookDetail() {
-        setTitle("Library App - Book Details");
-        setSize(500, 700);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+    private static final String QUERY_LOAD_BOOK_DETAILS = "SELECT b.title, b.author, c.category_name, b.books_stock, b.publisher, b.year, b.image, c.id AS category_id " +
+            "FROM books b INNER JOIN categories c ON b.category_id = c.id WHERE b.id = ?";
+    private static final String QUERY_UPDATE_BOOK = "UPDATE books SET title = ?, author = ?, books_stock = ?, publisher = ?, year = ?, category_id = ? WHERE id = ?";
+    private static final String QUERY_DELETE_BOOK = "DELETE FROM books WHERE id = ?";
+    private static final String QUERY_LOAD_CATEGORIES = "SELECT id, category_name FROM categories";
+
+    public BookDetail(Book parentPanel, int bookId) throws Exception {
+        this.parentPanel = parentPanel;
+        this.bookId = bookId;
+
+        setTitle("Book Details");
+        setSize(400, 600);
         setLayout(new BorderLayout());
+        setLocationRelativeTo(null);
 
-        // Panel buat tampilin gambar buku
-        lblImage = new JLabel();
-        lblImage.setHorizontalAlignment(JLabel.CENTER);
-        JPanel panelImage = new JPanel();
-        panelImage.setLayout(new BorderLayout());
-        panelImage.setPreferredSize(new Dimension(500, 300));
-        panelImage.add(lblImage, BorderLayout.CENTER);
-        add(panelImage, BorderLayout.NORTH);
+        JPanel mainPanel = new JPanel(new GridLayout(8, 2, 10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Panel buat judul buku
-        JPanel panelTitle = new JPanel();
-        panelTitle.setLayout(new FlowLayout(FlowLayout.LEFT)); // Align text to left
-        panelTitle.setBorder(new TitledBorder("Title"));
-        lblTitle = new JLabel("Nowhere to Go"); // Judul Buku
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 18));
-        panelTitle.add(lblTitle);
+        mainPanel.add(new JLabel("Title:"));
+        titleField = new JTextField();
+        mainPanel.add(titleField);
 
-        // Panel buat Author
-        JPanel panelAuthor = new JPanel();
-        panelAuthor.setLayout(new FlowLayout(FlowLayout.LEFT));
-        panelAuthor.setBorder(new TitledBorder("Author"));
-        JLabel lblAuthor = new JLabel("Antony Gasing");
-        lblAuthor.setFont(new Font("Arial", Font.PLAIN, 16));
-        panelAuthor.add(lblAuthor);
+        mainPanel.add(new JLabel("Author:"));
+        authorField = new JTextField();
+        mainPanel.add(authorField);
 
-        // Panel buat Category
-        JPanel panelCategory = new JPanel();
-        panelCategory.setLayout(new FlowLayout(FlowLayout.LEFT));
-        panelCategory.setBorder(new TitledBorder("Category"));
-        JLabel lblCategory = new JLabel("Drama, Adventure, Psychology");
-        lblCategory.setFont(new Font("Arial", Font.PLAIN, 16));
-        panelCategory.add(lblCategory);
+        mainPanel.add(new JLabel("Category:"));
+        categoryComboBox = new JComboBox<>();
+        mainPanel.add(categoryComboBox);
 
-        // Panel buat Author dan Category
-        JPanel panelAuthorCategory = new JPanel();
-        panelAuthorCategory.setLayout(new BoxLayout(panelAuthorCategory, BoxLayout.Y_AXIS));
-        panelAuthorCategory.add(panelAuthor);
-        panelAuthorCategory.add(panelCategory);
+        mainPanel.add(new JLabel("Stock:"));
+        stockField = new JTextField();
+        mainPanel.add(stockField);
 
-        // Panel buat Deskripsi Buku
-        JPanel panelDescription = new JPanel();
-        panelDescription.setLayout(new FlowLayout());
-        panelDescription.setBorder(new TitledBorder("Description"));
-        txtDescription = new JTextArea(4, 20);
-        txtDescription.setLineWrap(true);
-        txtDescription.setWrapStyleWord(true);
-        txtDescription.setText("This book dives into the lives of individuals facing the hardships of life, " +
-                "exploring themes of drama, adventure, and psychology. It's a journey through personal struggles " +
-                "and the quest for meaning, presenting a profound narrative on human resilience and the complexity " +
-                "of the human mind.");
-        txtDescription.setFont(new Font("Arial", Font.PLAIN, 18));
-        txtDescription.setEditable(false);
-        panelDescription.add(txtDescription);
+        mainPanel.add(new JLabel("Publisher:"));
+        publisherField = new JTextField();
+        mainPanel.add(publisherField);
 
-        // Tombol tentang buku buat ke new page
-        btnAboutBook = new JButton("Tentang Buku Ini");
-        btnAboutBook.addActionListener(e -> openAboutBookPage());
+        mainPanel.add(new JLabel("Year:"));
+        yearField = new JTextField();
+        mainPanel.add(yearField);
 
-        // layout buat panel deskripsi ama tombol
-        panelDescription.setLayout(new BorderLayout());
-        panelDescription.add(txtDescription, BorderLayout.CENTER);
-        JPanel panelButton = new JPanel();
-        panelButton.setLayout(new FlowLayout(FlowLayout.RIGHT));
-        panelButton.add(btnAboutBook);
-        panelDescription.add(panelButton, BorderLayout.SOUTH);
+        bookImageLabel = new JLabel("No Image");
+        mainPanel.add(new JLabel("Image:"));
+        mainPanel.add(bookImageLabel);
 
-        // gabungin semua panel
-        JPanel panelTabs = new JPanel();
-        panelTabs.setLayout(new BoxLayout(panelTabs, BoxLayout.Y_AXIS));
-        panelTabs.add(panelTitle);
-        panelTabs.add(panelAuthorCategory);
-        panelTabs.add(panelDescription);
+        add(mainPanel, BorderLayout.CENTER);
 
-        add(panelTabs, BorderLayout.CENTER);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton saveButton = new JButton("Save");
+        JButton deleteButton = new JButton("Delete");
 
+        saveButton.addActionListener(e -> {
+            try {
+                updateBookDetails();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Failed to update book: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        deleteButton.addActionListener(e -> {
+            try {
+                deleteBook();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Failed to delete book: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        buttonPanel.add(saveButton);
+        buttonPanel.add(deleteButton);
+
+        add(buttonPanel, BorderLayout.SOUTH);
+
+        loadCategories();
+        loadBookDetails();
         setVisible(true);
     }
 
-    private void openAboutBookPage() {
-        // newpage isinya tentang buku
-        JFrame aboutPage = new JFrame("About This Book");
-        aboutPage.setSize(400, 500);
-        aboutPage.setLocationRelativeTo(this);
-        aboutPage.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    private void loadCategories() {
+        try (Connection conn = new DatabaseConnection().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(QUERY_LOAD_CATEGORIES);
+             ResultSet rs = stmt.executeQuery()) {
 
-        // Panel buat Tentang Buku
-        JPanel panelAboutBook = new JPanel();
-        panelAboutBook.setLayout(new BorderLayout());
-        panelAboutBook.setBorder(new TitledBorder("Tentang Buku Ini"));
+            categoryComboBox.removeAllItems();
 
-        //  deskripsi buku
-        JLabel lblAboutBook = new JLabel("<html>This book dives into the lives of individuals facing the hardships of life, " +
-                "exploring themes of drama, adventure, and psychology. It's a journey through personal struggles " +
-                "and the quest for meaning, presenting a profound narrative on human resilience and the complexity " +
-                "of the human mind.</html>");
-        lblAboutBook.setFont(new Font("Arial", Font.PLAIN, 18));
-        lblAboutBook.setVerticalAlignment(SwingConstants.TOP);
-
-        // padding biar ga rapet ama border
-        lblAboutBook.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        panelAboutBook.add(lblAboutBook, BorderLayout.CENTER);
-
-        // Panel buat Detail Buku
-        JPanel panelBookDetails = new JPanel();
-        panelBookDetails.setLayout(new BoxLayout(panelBookDetails, BoxLayout.Y_AXIS));
-        panelBookDetails.setBorder(new TitledBorder("Detail Buku"));
-
-        // Informasi buku
-        JLabel lblLanguage = new JLabel("Language : Indonesia");
-        JLabel lblAuthor = new JLabel("Author : Antony Gasing");
-        JLabel lblPublisher = new JLabel("Publisher : Man United");
-        JLabel lblPublishedOn = new JLabel("Published on : 16-9-2024");
-        JLabel lblPages = new JLabel("Pages : 165 pages");
-        JLabel lblGenres = new JLabel("Genres : Drama, Adventure, Psychology");
-
-        // kecilin font JLabel
-        Font smallerFont = new Font("Arial", Font.PLAIN, 20);
-        lblLanguage.setFont(smallerFont);
-        lblAuthor.setFont(smallerFont);
-        lblPublisher.setFont(smallerFont);
-        lblPublishedOn.setFont(smallerFont);
-        lblPages.setFont(smallerFont);
-        lblGenres.setFont(smallerFont);
-
-        // padding space bawah
-        lblLanguage.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
-        lblAuthor.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-        lblPublisher.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-        lblPublishedOn.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-        lblPages.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-        lblGenres.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
-
-        // isi panel BookDetails
-        panelBookDetails.add(lblLanguage);
-        panelBookDetails.add(lblAuthor);
-        panelBookDetails.add(lblPublisher);
-        panelBookDetails.add(lblPublishedOn);
-        panelBookDetails.add(lblPages);
-        panelBookDetails.add(lblGenres);
-
-        // panel tombol "Back"
-        JPanel panelBackButton = new JPanel();
-        panelBackButton.setLayout(new BorderLayout());
-
-        // Tombol Back
-        JButton btnBack = new JButton("Back to Main Page");
-        btnBack.setFont(new Font("Arial", Font.PLAIN, 16));
-        btnBack.addActionListener(e -> {
-            aboutPage.dispose();
-        });
-
-        // pindahin lokasi tombol
-        panelBackButton.add(btnBack, BorderLayout.EAST);
-
-        //bikin panelAboutBook, panelBookDetails ama panelBackButton buat ke aboutPage
-        aboutPage.setLayout(new BorderLayout());
-        aboutPage.add(panelAboutBook, BorderLayout.NORTH);
-        aboutPage.add(panelBookDetails, BorderLayout.CENTER);
-        aboutPage.add(panelBackButton, BorderLayout.SOUTH); // Menambahkan panelBackButton di bawah
-
-        aboutPage.setVisible(true);
+            while (rs.next()) {
+                categoryComboBox.addItem(rs.getString("category_name"));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Failed to load categories: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new BookDetail());
+    private void loadBookDetails() throws Exception {
+        try (Connection conn = new DatabaseConnection().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(QUERY_LOAD_BOOK_DETAILS)) {
+
+            stmt.setInt(1, bookId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                titleField.setText(rs.getString("title"));
+                authorField.setText(rs.getString("author"));
+                categoryComboBox.setSelectedItem(rs.getString("category_name"));
+                stockField.setText(String.valueOf(rs.getInt("books_stock")));
+                publisherField.setText(rs.getString("publisher"));
+                yearField.setText(String.valueOf(rs.getInt("year")));
+
+                // Set image
+                byte[] imageBytes = rs.getBytes("image");
+                if (imageBytes != null) {
+                    ImageIcon bookIcon = new ImageIcon(imageBytes);
+                    bookImageLabel.setIcon(new ImageIcon(bookIcon.getImage().getScaledInstance(100, 150, Image.SCALE_SMOOTH)));
+                } else {
+                    bookImageLabel.setText("No Image");
+                }
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Failed to load book details: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateBookDetails() throws Exception {
+        if (titleField.getText().trim().isEmpty() || authorField.getText().trim().isEmpty() ||
+                stockField.getText().trim().isEmpty() || publisherField.getText().trim().isEmpty() ||
+                yearField.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "All fields must be filled.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            int stock = Integer.parseInt(stockField.getText().trim());
+            int year = Integer.parseInt(yearField.getText().trim());
+
+            if (stock < 0 || year < 0) {
+                JOptionPane.showMessageDialog(this, "Stock and Year must be positive numbers.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Stock and Year must be valid numbers.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String selectedCategory = (String) categoryComboBox.getSelectedItem();
+        int categoryId = getCategoryId(selectedCategory);
+
+        try (Connection conn = new DatabaseConnection().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(QUERY_UPDATE_BOOK)) {
+
+            stmt.setString(1, titleField.getText().trim());
+            stmt.setString(2, authorField.getText().trim());
+            stmt.setInt(3, Integer.parseInt(stockField.getText().trim()));
+            stmt.setString(4, publisherField.getText().trim());
+            stmt.setInt(5, Integer.parseInt(yearField.getText().trim()));
+            stmt.setInt(6, categoryId);
+            stmt.setInt(7, bookId);
+
+            int rowsUpdated = stmt.executeUpdate();
+            if (rowsUpdated > 0) {
+                JOptionPane.showMessageDialog(this, "Book updated successfully!");
+                parentPanel.refreshTable();
+                dispose();
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Failed to update book: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private int getCategoryId(String categoryName) throws Exception {
+        try (Connection conn = new DatabaseConnection().getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT id FROM categories WHERE category_name = ?")) {
+
+            stmt.setString(1, categoryName);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Failed to get category ID: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return -1;
+    }
+
+    private void deleteBook() {
+        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this book?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            try (Connection conn = new DatabaseConnection().getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(QUERY_DELETE_BOOK)) {
+
+                stmt.setInt(1, bookId);
+                int rowsDeleted = stmt.executeUpdate();
+                if (rowsDeleted > 0) {
+                    JOptionPane.showMessageDialog(this, "Book deleted successfully!");
+                    parentPanel.refreshTable();
+                    dispose();
+                }
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Failed to delete book: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
