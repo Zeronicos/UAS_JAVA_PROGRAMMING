@@ -1,6 +1,6 @@
 # UAS_JAVA_PROGRAMMING
 
-LIBTAR (LIBRARY UNTAR) adalah aplikasi dekstop untuk malakukan manajemen buku di perpustakaan universitas dan juga mengatur pinjaman buku kepada Mahasiswa yang ingin meminjam buku.
+LIBTAR (LIBRARY UNTAR) adalah aplikasi dekstop untuk melakukan manajemen buku di perpustakaan universitas dan juga mengatur pinjaman buku kepada Mahasiswa yang ingin meminjam buku.
 
 Anggota Kelompok:
 1. Nico Thomas (NIM : 535220133) --> username : Zeronicos
