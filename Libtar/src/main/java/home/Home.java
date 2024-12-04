@@ -8,22 +8,22 @@ import dashboard.Dashboard;
 import member.Member;
 import shelf.Shelf;
 import staff.Staff;
+import transaction.Borrowing;
+import transaction.Return;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class Home extends JFrame {
-    private CardLayout cardLayout;
-    private JPanel mainPanel;
 
-    public Home() {
+    public Home() throws Exception {
         setTitle("Library UNTAR");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 600);
         setLayout(new BorderLayout());
 
-        cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
+        CardLayout cardLayout = new CardLayout();
+        JPanel mainPanel = new JPanel(cardLayout);
 
         mainPanel.add(new Dashboard(), "dashboard");
         mainPanel.add(new Staff(), "staff");
@@ -31,6 +31,8 @@ public class Home extends JFrame {
         mainPanel.add(new Member(), "member");
         mainPanel.add(new Category(), "category");
         mainPanel.add(new Book(), "book");
+        mainPanel.add(new Borrowing(), "borrowing");
+        mainPanel.add(new Return(), "return");
 
         Sidebar sidebar = new Sidebar(cardLayout, mainPanel);
         add(sidebar, BorderLayout.WEST);
@@ -44,7 +46,7 @@ public class Home extends JFrame {
         setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         new Home();
     }
 }
