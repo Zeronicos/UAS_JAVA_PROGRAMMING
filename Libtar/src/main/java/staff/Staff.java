@@ -1,265 +1,172 @@
 package staff;
+
+import database.DatabaseConnection;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.awt.event.*;
 import java.sql.*;
-import java.util.ArrayList;
+import java.util.Vector;
 
-public class Staff extends JFrame {
-    private JTextField txtName, txtPhoneNumber, txtEmail;
-    private JButton btnSubmit;
-    private int editIndex = -1; // To indicate if the user is editing data
-    private Connection connection;
+public class Staff extends JPanel {
+    private JTable staffTable, workRecordTable;
+    private DefaultTableModel staffTableModel, workRecordTableModel;
+    private JComboBox<String> staffComboBox;
+    private JButton checkInButton, checkOutButton, addStaffButton;
+    private JLabel titleLabel;
 
-    public Staff() {
-        //konek ke database
-        try {
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/libtar", "kevin", "");
+    private DatabaseConnection dbConnection;
+    private Connection conn;
+
+    public Staff() throws Exception {
+        setLayout(new BorderLayout(10, 10)); 
+        setBackground(Color.WHITE);
+
+        dbConnection = new DatabaseConnection();
+        conn = dbConnection.getConnection();
+
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        titleLabel = new JLabel("Staff List");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+
+        addStaffButton = new JButton("Add Staff");
+        addStaffButton.addActionListener(e -> openCreateStaff());
+        headerPanel.add(addStaffButton, BorderLayout.EAST);
+
+        JPanel tablePanel = new JPanel(new BorderLayout(10, 10));
+
+        staffTableModel = new DefaultTableModel(new String[]{"ID", "Name", "Phone Number"}, 0);
+        staffTable = new JTable(staffTableModel);
+        staffTable.setRowHeight(30); 
+        loadStaffTableData();
+
+        JScrollPane staffScrollPane = new JScrollPane(staffTable);
+        tablePanel.add(headerPanel, BorderLayout.NORTH);
+        tablePanel.add(staffScrollPane, BorderLayout.CENTER);
+
+        JPanel staffControlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        staffComboBox = new JComboBox<>();
+        loadStaffData(); 
+
+        checkInButton = new JButton("Check In");
+        checkOutButton = new JButton("Check Out");
+
+        checkInButton.addActionListener(e -> checkIn());
+        checkOutButton.addActionListener(e -> checkOut());
+
+        staffControlPanel.add(new JLabel("Select Staff:"));
+        staffControlPanel.add(staffComboBox);
+        staffControlPanel.add(checkInButton);
+        staffControlPanel.add(checkOutButton);
+
+        tablePanel.add(staffControlPanel, BorderLayout.SOUTH);
+
+        JPanel workRecordPanel = new JPanel(new BorderLayout());
+        workRecordTableModel = new DefaultTableModel(new String[]{"ID", "Staff ID", "Check In Time", "Check Out Time"}, 0);
+        workRecordTable = new JTable(workRecordTableModel);
+
+        JScrollPane workRecordScrollPane = new JScrollPane(workRecordTable);
+        workRecordPanel.add(workRecordScrollPane, BorderLayout.CENTER);
+
+        add(tablePanel, BorderLayout.NORTH);
+        add(workRecordPanel, BorderLayout.CENTER);
+
+        loadWorkRecordTableData();
+    }
+
+    private void openCreateStaff() {
+        JFrame createStaffFrame = new CreateStaff();
+        createStaffFrame.setVisible(true);
+    }
+
+    private void loadStaffData() {
+        String query = "SELECT id, name FROM staffs";
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                staffComboBox.addItem(rs.getInt("id") + " - " + rs.getString("name"));
+            }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error connecting to database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error loading staff data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
 
-        setTitle("Form Input Staff");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 400);
-        setLocationRelativeTo(null);
+    private void loadStaffTableData() {
+        String query = "SELECT id, name, phone_number FROM staffs";
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+            staffTableModel.setRowCount(0); 
+            while (rs.next()) {
+                Vector<Object> row = new Vector<>();
+                row.add(rs.getInt("id"));
+                row.add(rs.getString("name"));
+                row.add(rs.getString("phone_number"));
 
-        setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.anchor = GridBagConstraints.WEST;
-
-        Font labelFont = new Font("Arial", Font.PLAIN, 16);
-        Font fieldFont = new Font("Arial", Font.PLAIN, 14);
-
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        JLabel lblName = new JLabel("Name");
-        lblName.setFont(labelFont);
-        add(lblName, gbc);
-
-        gbc.gridx = 1;
-        txtName = new JTextField(20);
-        txtName.setFont(fieldFont);
-        add(txtName, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        JLabel lblPhoneNumber = new JLabel("Phone Number");
-        lblPhoneNumber.setFont(labelFont);
-        add(lblPhoneNumber, gbc);
-
-        gbc.gridx = 1;
-        txtPhoneNumber = new JTextField(20);
-        txtPhoneNumber.setFont(fieldFont);
-        add(txtPhoneNumber, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        JLabel lblEmail = new JLabel("Email");
-        lblEmail.setFont(labelFont);
-        add(lblEmail, gbc);
-
-        gbc.gridx = 1;
-        txtEmail = new JTextField(20);
-        txtEmail.setFont(fieldFont);
-        add(txtEmail, gbc);
-
-        // button buat submit
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        btnSubmit = new JButton("Submit");
-        btnSubmit.setFont(new Font("Arial", Font.BOLD, 14));
-        add(btnSubmit, gbc);
-
-        btnSubmit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (validateInputs()) {
-                    String name = txtName.getText();
-                    String phoneNumber = txtPhoneNumber.getText();
-                    String email = txtEmail.getText();
-
-                    // update databse abis di edit
-                    if (editIndex == -1) {
-                        // Add new staff
-                        addStaffToDatabase(name, phoneNumber, email);
-                    } else {
-                        // edit staff
-                        updateStaffInDatabase(name, phoneNumber, email, editIndex);
-                        editIndex = -1; // Reset after editing
-                    }
-
-
-                    dispose();
-                    new MainPage(Staff.this, false).setVisible(true); // Open MainPage
-                }
+                staffTableModel.addRow(row);
             }
-        });
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading staff table data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    private boolean validateInputs() {
-        // Validasi logika input
-        if (txtName.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Name must be filled!", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
+    private void checkIn() {
+        String selectedStaff = (String) staffComboBox.getSelectedItem();
+        if (selectedStaff == null) {
+            JOptionPane.showMessageDialog(this, "Please select a staff member first.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-        if (!txtPhoneNumber.getText().matches("\\d+")) {
-            JOptionPane.showMessageDialog(this, "Phone Number must contain only digits!", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
+
+        int staffId = Integer.parseInt(selectedStaff.split(" - ")[0]);
+        String query = "INSERT INTO work_records (staff_id, check_in_time) VALUES (?, NOW())";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setInt(1, staffId);
+            pstmt.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Staff has checked in.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            loadWorkRecordTableData(); 
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error checking in: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-        if (!txtEmail.getText().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            JOptionPane.showMessageDialog(this, "Invalid email format!", "Error", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-        return true;
     }
 
-    private void addStaffToDatabase(String name, String phoneNumber, String email) {
-        try {
-            String query = "INSERT INTO staff (name, phone_number, email) VALUES (?, ?, ?)";
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, name);
-                stmt.setString(2, phoneNumber);
-                stmt.setString(3, email);
-                stmt.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Staff added successfully.");
+    private void checkOut() {
+        String selectedStaff = (String) staffComboBox.getSelectedItem();
+        if (selectedStaff == null) {
+            JOptionPane.showMessageDialog(this, "Please select a staff member first.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int staffId = Integer.parseInt(selectedStaff.split(" - ")[0]);
+        String query = "UPDATE work_records SET check_out_time = NOW() WHERE staff_id = ? AND check_out_time IS NULL";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setInt(1, staffId);
+            int rowsUpdated = pstmt.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                JOptionPane.showMessageDialog(this, "Staff has checked out.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadWorkRecordTableData(); // Refresh work record table
+            } else {
+                JOptionPane.showMessageDialog(this, "No check-in found for this staff.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error adding staff: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error checking out: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void updateStaffInDatabase(String name, String phoneNumber, String email, int id) {
-        try {
-            String query = "UPDATE staff SET name = ?, phone_number = ?, email = ? WHERE id = ?";
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setString(1, name);
-                stmt.setString(2, phoneNumber);
-                stmt.setString(3, email);
-                stmt.setInt(4, id);
-                stmt.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Staff updated successfully.");
+    private void loadWorkRecordTableData() {
+        String query = "SELECT id, staff_id, check_in_time, check_out_time FROM work_records";
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+            workRecordTableModel.setRowCount(0); 
+            while (rs.next()) {
+                Vector<Object> row = new Vector<>();
+                row.add(rs.getInt("id"));
+                row.add(rs.getInt("staff_id"));
+                row.add(rs.getTimestamp("check_in_time"));
+                row.add(rs.getTimestamp("check_out_time"));
+                workRecordTableModel.addRow(row);
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error updating staff: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void deleteStaffFromDatabase(int id) {
-        try {
-            String query = "DELETE FROM staff WHERE id = ?";
-            try (PreparedStatement stmt = connection.prepareStatement(query)) {
-                stmt.setInt(1, id);
-                stmt.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Staff deleted successfully.");
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error deleting staff: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public static void main(String[] args) {
-        new Staff().setVisible(true);
-    }
-
-    // dispay data staff dari database
-    class MainPage extends JFrame {
-        private Staff staffFrame;
-
-        public MainPage(Staff staffFrame, boolean isStaff) {
-            this.staffFrame = staffFrame;
-            setTitle("Staff List");
-            setSize(700, 400);
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            setLocationRelativeTo(null);
-
-            String[] columnNames = {"No", "Name", "Phone Number", "Email", "Action"};
-            DefaultTableModel model = new DefaultTableModel(columnNames, 0);
-
-            JTable table = new JTable(model);
-            table.setRowHeight(30);
-
-            try {
-                String query = "SELECT * FROM staff";
-                Statement stmt = connection.createStatement();
-                ResultSet rs = stmt.executeQuery(query);
-
-                while (rs.next()) {
-                    model.addRow(new Object[]{
-                            rs.getInt("id"),
-                            rs.getString("name"),
-                            rs.getString("phone_number"),
-                            rs.getString("email"),
-                            "Delete"
-                    });
-                }
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error retrieving staff: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
-
-            table.getColumn("Action").setCellRenderer(new ButtonRenderer());
-            table.getColumn("Action").setCellEditor(new ButtonEditor(new JCheckBox(), table, true));
-
-            JScrollPane scrollPane = new JScrollPane(table);
-            add(scrollPane, BorderLayout.CENTER);
-        }
-    }
-
-    class ButtonRenderer extends JButton implements TableCellRenderer {
-        public ButtonRenderer() {
-            setOpaque(true);
-        }
-
-
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            setText((value == null) ? "" : value.toString());
-            return this;
-        }
-    }
-
-    class ButtonEditor extends DefaultCellEditor {
-        private JButton button;
-        private boolean isPushed;
-        private JTable table;
-        private boolean isDelete;
-
-        public ButtonEditor(JCheckBox checkBox, JTable table, boolean isDelete) {
-            super(checkBox);
-            this.table = table;
-            this.isDelete = isDelete;
-            button = new JButton();
-            button.setOpaque(true);
-            button.addActionListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent e) {
-                    fireEditingStopped();
-                }
-            });
-        }
-
-
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            button.setText((value == null) ? "" : value.toString());
-            isPushed = true;
-            return button;
-        }
-
-
-        public Object getCellEditorValue() {
-            if (isPushed) {
-                int selectedRow = table.getSelectedRow();
-                int staffID = (int) table.getValueAt(selectedRow, 0);
-                if (isDelete) {
-                    deleteStaffFromDatabase(staffID);
-                }
-            }
-            isPushed = false;
-            return button.getText();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading work records: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
