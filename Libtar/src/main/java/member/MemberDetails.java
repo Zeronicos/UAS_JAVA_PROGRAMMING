@@ -14,7 +14,7 @@ class MemberDetail extends JDialog {
     private JTextField studentIdField;
     private JTextField majorField;
     private JTextField emailField;
-    private JTextField phoneField; // Tambahan untuk Phone Number
+    private JTextField phoneField;
     private JButton updateButton;
     private JButton deleteButton;
     private int memberId;
@@ -33,7 +33,7 @@ class MemberDetail extends JDialog {
 
         // GridBagConstraints untuk mengatur tata letak komponen
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(5, 10, 5, 10); // Margin antar komponen
+        constraints.insets = new Insets(5, 10, 5, 10); 
 
         // Komponen form untuk detail member
         addFormField("Name:", nameField = new JTextField(20), 0, constraints);
@@ -84,12 +84,12 @@ class MemberDetail extends JDialog {
     private void addFormField(String labelText, JTextField textField, int gridY, GridBagConstraints constraints) {
         constraints.gridx = 0;
         constraints.gridy = gridY;
-        constraints.anchor = GridBagConstraints.EAST; // Label rata kanan
+        constraints.anchor = GridBagConstraints.EAST; 
         JLabel label = new JLabel(labelText);
         add(label, constraints);
 
         constraints.gridx = 1;
-        constraints.anchor = GridBagConstraints.WEST; // Field rata kiri
+        constraints.anchor = GridBagConstraints.WEST;
         add(textField, constraints);
     }
 
@@ -109,7 +109,7 @@ class MemberDetail extends JDialog {
                         studentIdField.setText(rs.getString("student_id"));
                         majorField.setText(rs.getString("major"));
                         emailField.setText(rs.getString("email"));
-                        phoneField.setText(rs.getString("phone_number")); // Load phone number
+                        phoneField.setText(rs.getString("phone_number"));
                     }
                 }
             }
@@ -129,7 +129,7 @@ class MemberDetail extends JDialog {
                 pstmt.setString(2, studentIdField.getText());
                 pstmt.setString(3, majorField.getText());
                 pstmt.setString(4, emailField.getText());
-                pstmt.setString(5, phoneField.getText()); // Update phone number
+                pstmt.setString(5, phoneField.getText());
                 pstmt.setInt(6, memberId);
 
                 pstmt.executeUpdate();
